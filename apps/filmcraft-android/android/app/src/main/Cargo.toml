@@ -1,0 +1,45 @@
+[package]
+name = "filmcraft-android"
+description = "FilmCraft for Android: touch-first host (android-activity + eframe/wgpu) around the shared engine and egui frontend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "filmcraft_android"
+crate-type = ["cdylib"]
+
+# Like filmcraft-platform, this crate needs `unsafe` for FFI (JNI exports); only src/bridge.rs opts in.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+needless_range_loop = "allow"
+type_complexity = "allow"
+
+# Everything is Android-only, so `cargo build` on a desktop (default-members = apps/*) stays a no-op here.
+[target.'cfg(target_os = "android")'.dependencies]
+filmcraft-engine = { workspace = true }
+filmcraft-export = { workspace = true }
+filmcraft-project = { workspace = true }
+filmcraft-render = { workspace = true }
+filmcraft-time = { workspace = true }
+filmcraft-gpu = { workspace = true }
+filmcraft-ui-egui = { workspace = true }
+filmcraft-platform = { workspace = true }
+egui = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "android-game-activity"] }
+# Must match the version winit (via eframe) uses.
+android-activity = { version = "0.6", features = ["game-activity"] }
+android_logger = "0.15"
+jni = "0.21"
+ndk-context = "0.1"
+cpal = "0.16"
+serde_json = { workspace = true }
+log = { workspace = true }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+sys-locale = "0.3"
