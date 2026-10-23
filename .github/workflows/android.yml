@@ -1,0 +1,35 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Install NDK and platform
+        run: sdkmanager "ndk;26.3.11579264" "platforms;android-35" "build-tools;35.0.0"
+      - run: cargo install cargo-ndk --locked
+      - name: Build Rust library
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/26.3.11579264
+        run: cargo ndk -t arm64-v8a --platform 29 -o apps/filmcraft-android/android/app/src/main/jniLibs build --release -p filmcraft-android
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+      - name: Build APK
+        run: gradle assembleDebug -p apps/filmcraft-android/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: filmcraft-apk
+          path: apps/filmcraft-android/android/app/build/outputs/apk/debug/*.apk
